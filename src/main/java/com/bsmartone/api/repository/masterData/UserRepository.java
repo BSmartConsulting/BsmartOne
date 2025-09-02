@@ -1,0 +1,15 @@
+package com.bsmartone.api.repository.masterData;
+
+import com.bsmartone.api.model.masterData.User;
+import java.util.List;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+
+    Optional<User> findByUsername(String username);
+
+    Optional<User> findByTaxid(String taxid);
+
+    public List<User> findAllByDeletedFalse();
+}

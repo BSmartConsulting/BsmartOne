@@ -1,0 +1,93 @@
+-- -- Security core (prefijos sec_)
+-- CREATE TABLE IF NOT EXISTS sec_roles (
+--   id BIGINT NOT NULL AUTO_INCREMENT,
+--   code VARCHAR(64) NOT NULL UNIQUE,
+--   name VARCHAR(128) NOT NULL,
+--   description VARCHAR(255),
+--   created_at TIMESTAMP NULL,
+--   modified_at TIMESTAMP NULL,
+--   deleted TINYINT(1) NOT NULL DEFAULT 0,
+--   version BIGINT,
+--   PRIMARY KEY (id)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 
+-- CREATE TABLE IF NOT EXISTS sec_users (
+--   id BIGINT NOT NULL AUTO_INCREMENT,
+--   username VARCHAR(100) NOT NULL UNIQUE,
+--   email VARCHAR(180) NOT NULL UNIQUE,
+--   full_name VARCHAR(180) NOT NULL,
+--   password VARCHAR(200) NOT NULL,
+--   enabled TINYINT(1) NOT NULL DEFAULT 1,
+--   created_at TIMESTAMP NULL,
+--   modified_at TIMESTAMP NULL,
+--   deleted TINYINT(1) NOT NULL DEFAULT 0,
+--   version BIGINT,
+--   PRIMARY KEY (id),
+--   INDEX idx_sec_users_username (username),
+--   INDEX idx_sec_users_email (email)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 
+-- CREATE TABLE IF NOT EXISTS sec_user_roles (
+--   user_id BIGINT NOT NULL,
+--   role_id BIGINT NOT NULL,
+--   PRIMARY KEY (user_id, role_id),
+--   CONSTRAINT fk_sec_user_roles_user FOREIGN KEY (user_id) REFERENCES sec_users(id),
+--   CONSTRAINT fk_sec_user_roles_role FOREIGN KEY (role_id) REFERENCES sec_roles(id)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 
+-- CREATE TABLE IF NOT EXISTS sec_access_definition (
+--   id BIGINT NOT NULL AUTO_INCREMENT,
+--   code VARCHAR(100) NOT NULL UNIQUE,
+--   http_method VARCHAR(10) NOT NULL,
+--   path_pattern VARCHAR(255) NOT NULL,
+--   action VARCHAR(50),
+--   description VARCHAR(255),
+--   enabled TINYINT(1) NOT NULL DEFAULT 1,
+--   PRIMARY KEY (id),
+--   INDEX idx_sec_accessdef_method (http_method),
+--   INDEX idx_sec_accessdef_path (path_pattern)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 
+-- CREATE TABLE IF NOT EXISTS sec_access_role (
+--   id BIGINT NOT NULL AUTO_INCREMENT,
+--   role_id BIGINT NOT NULL,
+--   access_code VARCHAR(100) NOT NULL,
+--   allow TINYINT(1) NOT NULL DEFAULT 1,
+--   PRIMARY KEY (id),
+--   UNIQUE KEY uk_sec_access_role (role_id, access_code),
+--   CONSTRAINT fk_sec_access_role_role FOREIGN KEY (role_id) REFERENCES sec_roles(id)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 
+-- -- Auditoría base
+-- CREATE TABLE IF NOT EXISTS audit_log (
+--   id BIGINT NOT NULL AUTO_INCREMENT,
+--   entity_name VARCHAR(120) NOT NULL,
+--   entity_id VARCHAR(64) NOT NULL,
+--   username VARCHAR(120),
+--   action VARCHAR(20) NOT NULL,
+--   field VARCHAR(120),
+--   old_value TEXT,
+--   new_value TEXT,
+--   ts TIMESTAMP NOT NULL,
+--   PRIMARY KEY (id),
+--   INDEX idx_audit_entity (entity_name, entity_id, ts)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 
+-- -- Seeds
+-- -- Permisos base
+-- INSERT INTO sec_access_definition (code, http_method, path_pattern, action, description, enabled)
+-- SELECT 'USERS_READ','GET','/api/v1/users/**','READ','Listar usuarios',1
+-- WHERE NOT EXISTS (SELECT 1 FROM sec_access_definition WHERE code='USERS_READ');
+-- 
+-- INSERT INTO sec_access_definition (code, http_method, path_pattern, action, description, enabled)
+-- SELECT 'USERS_WRITE','ALL','/api/v1/users/**','WRITE','Operaciones de usuario',1
+-- WHERE NOT EXISTS (SELECT 1 FROM sec_access_definition WHERE code='USERS_WRITE');
+-- 
+-- -- Asignación al rol ADMIN
+-- INSERT INTO sec_access_role (role_id, access_code, allow)
+-- SELECT r.id, 'USERS_READ', 1 FROM sec_roles r WHERE r.code='ADMIN'
+-- ON DUPLICATE KEY UPDATE allow=VALUES(allow);
+-- 
+-- INSERT INTO sec_access_role (role_id, access_code, allow)
+-- SELECT r.id, 'USERS_WRITE', 1 FROM sec_roles r WHERE r.code='ADMIN'
+-- ON DUPLICATE KEY UPDATE allow=VALUES(allow);
