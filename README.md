@@ -200,3 +200,4 @@ GET /api/v1/sync/{runId}
 - **OAuth/API/batch/Oracle**: tabla `application_parameters`.
 - **Entidad + endpoint + delimitador archivo**: tabla `entity_configuration`.
 - **Campos JSON a texto (orden CSV)**: tabla `entity_field_mapping`.
+# CargaReplicaOHI
